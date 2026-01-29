@@ -6,7 +6,7 @@ test.describe('Edit Training Session Tests', () => {
 
   test.beforeEach(async ({ page }) => {
     // First login
-    await page.goto('/login');
+    await page.goto('http://localhost:5173/login');
     await page.getByLabel('Username *').fill('joel');
     await page.getByLabel('Password *').fill('grimberg');
     await page.getByRole('button', { name: 'Sign in to your account' }).click();
