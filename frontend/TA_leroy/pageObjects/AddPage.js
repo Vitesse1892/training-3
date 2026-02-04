@@ -27,6 +27,9 @@ export class AddPage {
         await this.fieldDescription.fill(data.description);
         await this.fieldStatus.selectOption(data.status);
         await this.fieldDuration.fill(data.durationHours);
-        await this.btnCreateSession.click();
     }   
+
+    async clickCreateSessionButton(){
+        await this.btnCreateSession.click();
+    }
 }
