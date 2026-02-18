@@ -1,0 +1,3 @@
+{
+    "jestrunner.playwrightConfigPath": "frontend/TA_leroy/playwright.config.ts"
+}

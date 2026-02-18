@@ -18,6 +18,7 @@ test.describe('Sessions feature', () => {
       process.env.ADMIN_PASSWORD_CORRECT
     );
     await basePage.assertUrlEndsWith('list');
+    await basePage.assertPageTitle("Training Sessions");
   });
 
 test('1. Een succesvol toegevoegde session is zichtbaar op de list page en bevat daar de juiste data', async ({ listPage, addPage, basePage }) => {
@@ -130,6 +131,12 @@ test('6. Een sessie kan succesvol worden verwijderd vanuit de edit page --> Redi
   //Controleren of je op de list page bent en sessie niet meer in de lijst staat
   await basePage.assertUrlEndsWith('list');
   await listPage.expectSessionNotPresent(scenarioContextAddedSessions.title);
+});
+
+test("7. Een sessie kan succesvol worden gefilterd op title, duration en status", async ({
+  listPage,
+}) => {
+  await listPage.getAllVisibleSessions();
 });
 
 });
