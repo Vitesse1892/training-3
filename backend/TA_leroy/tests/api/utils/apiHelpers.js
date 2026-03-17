@@ -1,28 +1,20 @@
-// export const createSession = async (api, payload) => {
-//   const payload = createSessionData();
-  
-//   const res = await api.post('/api/sessions', { data: payload });
+import * as testData from './testData.js';
 
-//   if (res.status() !== 201) {
-//     console.error("CREATE FAILED:", payload);
-//     console.error(await res.text());
-//   }
-
-//   return res;
-// };
-
-//Random session en createSessionData goed zetten
-
-export const createSessions = async (api, count, createSessionData) => {
+export const createMultipleSessions = async (api, count) => {
 
   const payloads = [];
   const responses = [];
 
   for (let i = 0; i < count; i++) {
+    const payload = testData.randomSession();
+    console.log("FINAL PAYLOAD SENT:", payload);
+    const res = await api.post('/api/sessions', payload );
 
-    const payload = randomSession();
+    console.log('RES STATUS:', res.status());
+    console.log('RES TEXT:', await res.text());
 
-    const res = await api.post('/api/sessions', { data: payload });
+    console.log('TYPE OF api:', typeof api);
+    console.log('api.constructor.name:', api.constructor.name);
 
     if (res.status() !== 201) {
       console.error("CREATE FAILED:", payload);
@@ -41,8 +33,8 @@ export const createSessions = async (api, count, createSessionData) => {
 export const getSession = (api, id) =>
   api.get(`/api/sessions/${id}`);
 
-export const updateSession = (api, id, payload) =>
-  api.put(`/api/sessions/${id}`, { data: payload });
+export const updateSession = (api, id) =>
+  api.put(`/api/sessions/${id}`, { json: data });
 
 export const deleteSession = (api, id) =>
   api.delete(`/api/sessions/${id}`);

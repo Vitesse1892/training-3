@@ -1,15 +1,53 @@
 import { ApiClient } from '../api/utils/apiClient';
 
-export const apiFixture = {
-  api: async ({ request, baseURL }, use) => {
-    const client = new ApiClient(request, baseURL);
-    await use(client);
-  },
+console.log(">>> API FIXTURE LOADED <<<");
 
-  requestContext: async ({ playwright, baseURL }, use) => {
-    const ctx = await playwright.request.newContext({ baseURL });
-    await use(ctx);
-    await ctx.dispose();
+export const apiFixture = {
+  api: async ({ playwright, baseURL }, use) => {
+    const requestContext = await playwright.request.newContext({
+      baseURL,
+      extraHTTPHeaders: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log(">>> API FIXTURE LOADED <<<");
+
+    requestContext.on('request', req => {
+      console.log('PW REQUEST:', req.method(), req.url());
+      console.log('PW HEADERS:', req.headers());
+      try {
+        console.log('PW BODY:', req.postDataJSON());
+      } catch {
+        console.log('PW BODY: <not JSON>');
+      }
+    });
+
+    const client = new ApiClient(requestContext);
+    await use(client);
+
+    await requestContext.dispose();
   }
 };
 
+
+
+
+
+// import { ApiClient } from '../api/utils/apiClient';
+
+// export const apiFixture = {
+//   api: async ({ playwright, baseURL }, use) => {
+//     const requestContext = await playwright.request.newContext({
+//       baseURL,
+//       extraHTTPHeaders: {
+//         'Content-Type': 'application/json'
+//       }
+//     });
+
+//     const client = new ApiClient(requestContext, baseURL);
+//     await use(client);
+
+//     await requestContext.dispose();
+//   }
+// };

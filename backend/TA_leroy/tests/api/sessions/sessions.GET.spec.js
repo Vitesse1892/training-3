@@ -1,8 +1,7 @@
 import { test as base, expect } from '@playwright/test';
-import { apiFixture } from '../../fixtures/api-fixture';
-//import { createSessionData, updateSessionData } from '../utils/testData';
-import { expectOk, expectBadRequest, expectNotFound } from '../utils/assertions';
-import { createSessions } from '../utils/apiHelpers';
+import { apiFixture } from '../../fixtures/api-fixture.js';
+import * as assertions from '../utils/assertions';
+import * as apiHelpers from '../utils/apiHelpers';
 
 const test = base.extend(apiFixture);
 
@@ -12,16 +11,17 @@ test.describe('Sessions API – CRUD & validation', () => {
   let responses = [];
 
   test.beforeEach(async ({ api }) => {
-    const result = await createSessions(api, 3, createSessionData);
+    const result = await apiHelpers.createMultipleSessions(api, 1);
     payloads = result.payloads;
     responses = result.responses;
-    //console.log('Request bodies:', payloads);
-    //console.log('Response bodies:', responses);
+    
+    console.log('Request bodies:', payloads);
+    console.log('Response bodies:', responses);
   });
 
   test('GET /sessions returns array', async ({ api }) => {
     const res = await api.get('/api/sessions');
-    expectOk(res);
+    assertions.expectOk(res);
 
     const body = await res.json();
     expect(Array.isArray(body)).toBe(true);
@@ -29,7 +29,7 @@ test.describe('Sessions API – CRUD & validation', () => {
 
   test('GET /sessions items contain required fields', async ({ api }) => {
     const res = await api.get('/api/sessions');
-    expectOk(res);
+    assertions.expectOk(res);
 
     const list = await res.json();
     for (const item of list) {
@@ -43,7 +43,7 @@ test.describe('Sessions API – CRUD & validation', () => {
 
   test('GET /sessions/:id returns correct schema', async ({ api }) => {
     const res = await api.get('/api/sessions/1');
-    expectOk(res);
+    assertions.expectOk(res);
 
     const body = await res.json();
 
@@ -109,11 +109,11 @@ test.describe('Sessions API – CRUD & validation', () => {
 
       // Statuscode assertions via jouw utils
       if (c.expected === 404) {
-        expectNotFound(res);
+        assertions.expectNotFound(res);
       } else if (c.expected === 400) {
-        expectBadRequest(res);
+        assertions.expectBadRequest(res);
       } else if (c.expected === 200) {
-        expectOk(res);
+        assertions.expectOk(res);
       } else {
         throw new Error(`Unexpected expected status: ${c.expected}`);
       }

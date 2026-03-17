@@ -48,13 +48,17 @@ const swaggerSpec = swaggerJsdoc({
   apis: ['./src/**/*.js'],
 });
 
+// Enable JSON body parsing
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // Swagger UI endpoint
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+//app.use(bodyParser.json());
+//app.use(bodyParser.urlencoded({ extended: true }));
 
 // Initialize database service
 const dbService = new DatabaseService();
@@ -727,6 +731,10 @@ app.get('/api/sessions/:id', async (req, res) => {
 
 // Create new training session
 app.post('/api/sessions', async (req, res) => {
+  console.log('BACKEND RAW HEADERS:', req.headers);
+  console.log("BACKEND RECEIVED BODY:", req.body);
+
+
   try {
     const { title, description, status, duration } = req.body;
     

@@ -8,7 +8,7 @@ export const randomString = (len = 10) =>
 export const randomSession = () => ({
   title: `API Test Session - ${randomUUID()}`,
   description: randomString(30),
-  status: 'Pending',
+  status: "Pending",
   duration: 2.5,
 });
 
