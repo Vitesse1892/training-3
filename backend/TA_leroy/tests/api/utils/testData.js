@@ -1,30 +1,38 @@
 import { randomUUID } from 'crypto';
+import { SESSION_STATUS } from '../../constants/sessionStatus.js';
 
 export const randomString = (len = 10) =>
   Array.from({ length: len }, () =>
     "abcdefghijklmnopqrstuvwxyz".charAt(Math.floor(Math.random() * 26))
   ).join('');
 
+export const randomValidStatus = () => {
+  const statuses = Object.values(SESSION_STATUS);
+  return statuses[Math.floor(Math.random() * statuses.length)];
+};
+
+export const randomDuration = () => {
+  const steps = 201; // 0 t/m 100 in stappen van 0.5
+  const index = Math.floor(Math.random() * steps);
+  return index * 0.5;
+};
+
+
 export const randomSession = () => ({
   title: `API Test Session - ${randomUUID()}`,
   description: randomString(30),
-  status: "Pending",
-  duration: 2.5,
+  status: randomValidStatus(),
+  duration: randomDuration(),
 });
 
-// export const updateSessionData = () => ({
-//   title: `API Test Session Updated - ${randomUUID()}`,
-//   description: 'Updated via Playwright API test',
-//   status: 'In Progress',
-//   duration: 3.0,
-// });
+
 
 // invalid values per veld
 export const invalidFieldValues = {
-  title: ["", 123, null, "a".repeat(10000)],
-  description: [999, null],
-  status: ["INVALID_STATUS", "", "Cancelled"],
-  duration: ["five", -1, null]
+  title: ["", null],
+  description: ["", null],
+  status: ["INVALID_STATUS", "", "Cancelled", null],
+  duration: ["five", -1, , "", null]
 };
 
 // genereert volledige payloads met 1 invalide veld

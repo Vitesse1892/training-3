@@ -4,12 +4,14 @@ console.log(">>> API FIXTURE LOADED <<<");
 
 export const apiFixture = {
   api: async ({ playwright, baseURL }, use) => {
+    console.log("BASE URL USED:", baseURL);
     const requestContext = await playwright.request.newContext({
       baseURL,
       extraHTTPHeaders: {
         'Content-Type': 'application/json'
       }
     });
+    
 
     console.log(">>> API FIXTURE LOADED <<<");
 

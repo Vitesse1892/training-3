@@ -10,13 +10,26 @@ test.describe('Sessions API – CRUD & validation', () => {
   let payloads = [];
   let responses = [];
 
+  //Maak een x aantal sessies met willekeurige data aan voorafgaand aan elke test
   test.beforeEach(async ({ api }) => {
-    const result = await apiHelpers.createMultipleSessions(api, 1);
+    const result = await apiHelpers.createMultipleSessions(api, 5);
     payloads = result.payloads;
     responses = result.responses;
     
     console.log('Request bodies:', payloads);
     console.log('Response bodies:', responses);
+  });
+
+  // Verwijder alle aangemaakte sessies na elke test
+  test.afterEach(async ({ api }) => {
+    for (const response of responses) {
+      try {
+        await apiHelpers.deleteSession(api, response.id);
+        console.log(`Deleted session: ${response.id}`);
+      } catch (error) {
+        console.error(`Failed to delete session ${response.id}:`, error);
+      }
+    }
   });
 
   test('GET /sessions returns array', async ({ api }) => {
