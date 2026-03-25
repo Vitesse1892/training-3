@@ -29,35 +29,83 @@ export const randomSession = () => ({
 
 // invalid values per veld
 export const invalidFieldValues = {
-  title: ["", null],
-  description: ["", null],
-  status: ["INVALID_STATUS", "", "Cancelled", null],
-  duration: ["five", -1, , "", null]
+  title: [
+    "", 
+    null,
+    undefined
+  ],
+
+  description: [
+    "", 
+    null,
+    undefined
+  ],
+
+  status: [
+    "INVALID_STATUS", 
+    "", 
+    "Cancelled", 
+    null
+  ],
+
+  duration: [
+    "five", 
+    -1, 
+    undefined,                 //Lege waarde (undefined)
+    "", 
+    null 
+  ]
 };
 
-// genereert volledige payloads met 1 invalide veld
-export const generateInvalidUpdatePayloads = () => {
+export const validFieldValues = {
+  title: [
+    "A", // minimale lengte
+    "Introduction to Playwright", // normaal
+    "Advanced End-to-End Testing with Playwright and CI/CD Pipelines", // lange string
 
-  const payloads = [];
+    //Speciale tekens
+    "!@#$%^&*()_+-=[]{}|;:,.<>?",
+    "Test & Validate @ API #1",
 
-  for (const field in invalidFieldValues) {
+    //Unicode / internationale tekens
+    "Cursus Nederlands – gevorderd",
+    "Prüfung Einführung",
+    "Sesión número 1",
 
-    for (const value of invalidFieldValues[field]) {
+    // 😊 emoji
+    "Playwright 🚀",
+    "Testing ✅",
 
-      const base = randomSession();
+    // 🔢 mix van alles
+    "Test 123 !@# API 🚀"
+  ],
 
-      base[field] = value;
+  description: [
+    "Short desc", // kort
+    "Learn the basics of Playwright testing framework", // normaal
+    "This is a very long description intended to test how the system handles larger text fields without breaking or truncating unexpectedly.", // lang
 
-      payloads.push({
-        field,
-        value,
-        payload: base
-      });
-    }
+    //Speciale tekens
+    "Beschrijving met tekens !@#$%^&*() en symbols <>?",
 
-  }
+    //Unicode
+    "Dit is een beschrijving met accenten é è ë ï ö ü",
+    "Descripción con caracteres especiales ñ á",
 
-  return payloads;
+    //Emoji
+    "Testing API 🚀 works fine ✅",
+  ],
+
+  status: [
+    "Completed",
+    "In Progress",
+  ],
+
+  duration: [
+    1,        // minimum (realistisch)
+    10,       // normaal
+    99999     // grotere waarde (edge maar geldig)
+  ]
 };
 
 

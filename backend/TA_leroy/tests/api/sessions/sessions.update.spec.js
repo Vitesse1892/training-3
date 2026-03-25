@@ -10,87 +10,136 @@ const test = base.extend(apiFixture);
 
 test.describe('Sessions update API', () => {
 
-  let payloads = [];
-  let responses = [];
+  let originalPayloads = [];
+  let originalFetchedSessionsById = [];
 
   //Maak een x aantal sessies met willekeurige data aan voorafgaand aan elke test
   test.beforeEach(async ({ api }) => {
     const result = await apiHelpers.createMultipleSessions(api, 1);
-    payloads = result.payloads;
-    responses = result.responses;
-    
-    console.log('Request bodies:', payloads);
-    console.log('Response bodies:', responses);
+    originalPayloads = result.requestPayloads;
+    originalFetchedSessionsById = result.fetchedSessionsById;
+
+    console.log('Request bodies:', originalPayloads);
+    console.log('Response fetched sessions:', originalFetchedSessionsById);
   });
 
   // Verwijder alle aangemaakte sessies na elke test
   test.afterEach(async ({ api }) => {
-    for (const response of responses) {
+    for (const item of originalFetchedSessionsById) {
       try {
-        await apiHelpers.deleteSession(api, response.id);
-        console.log(`Deleted session: ${response.id}`);
+        await apiHelpers.deleteSession(api, item.id);
+        console.log(`Deleted session: ${item.id}`);
       } catch (error) {
-        console.error(`Failed to delete session ${response.id}:`, error);
+        console.error(`Failed to delete session ${item.id}:`, error);
       }
     }
   });
 
   
-  test('1. Update van bestaande sessie met ongeldige data resulteert in 400-error', async ({ api }) => {
 
-    // 1. Neem de eerste session die in beforeEach is aangemaakt
-    const sessionId = responses[0].id;
-    let originalSession = responses[0];
-    
-    // 2. Genereer invalid payloads
-    const invalidCases = testData.generateInvalidUpdatePayloads();
-    let invalidUpdatesCount = 0;
+  test.describe('1. Update van bestaande sessie met invalide veldwaarden geeft 400 en laat sessie ongewijzigd', () => {
 
-    // 3. Test elke invalid case
-    for (const invalidCase of invalidCases) {
-        //console.log(`Testing invalid field: ${invalidCase.field} with value: ${invalidCase.value}`);
+    const invalidFieldValues = testData.invalidFieldValues;
 
-        // 4. Probeer de session te updaten met invalid data
-        const updateRes = await apiHelpers.updateSession(api, sessionId, invalidCase.payload);
+    for (const [field, values] of Object.entries(invalidFieldValues)) {
 
-        // 5. Verwacht een 400 Bad Request response
-        if (updateRes.status() !== 400) {
-            console.log(`❌ INVALID UPDATE ACCEPTED: field "${invalidCase.field}" with value "${invalidCase.value}" resulted in status ${updateRes.status()} instead of 400`);
-            invalidUpdatesCount += 1;
+      for (const value of values) {
 
-            // 3. Rollback: originele sessie herstellen
-            await apiHelpers.updateSession(api, sessionId, {
-            title: originalSession.title,
-            description: originalSession.description,
-            status: originalSession.status,
-            duration: originalSession.duration
-            });
-        }
-        
+        test(`Invalid update: veld "${field}" met waarde ${JSON.stringify(value)} geeft 400`, async ({ api }) => {
+          // 1. Unieke sessie is al aangemaakt in beforeEach
+          const sessionId = originalFetchedSessionsById[0].id;
+          const originalFetchedSession = originalFetchedSessionsById[0];
+          const originalPayload = originalPayloads[0];
 
-        // 6. Optioneel: verifieer dat de sessie ongewijzigd is gebleven na de update poging of na eventuele rollback
-        const currentSession = await apiHelpers.getSession(api, sessionId);
+          // 2. Maak update-payload met ontbrekend veld
+          const updatePayload = { ...originalPayload };
+          updatePayload[field] = value;
 
-        expect(currentSession).toMatchObject({
-                id: originalSession.id,
-                title: originalSession.title,
-                description: originalSession.description,
-                status: originalSession.status,
-                duration: originalSession.duration
-            });
-        console.log(`✓ Original session unchanged after invalid update attempt`);
+          // 3. Update uitvoeren
+          const updateRes = await apiHelpers.updateSession(api, sessionId, updatePayload);
 
+          // 4. Huidige staat ophalen
+          const FetchedSessionAfterUpdate = await apiHelpers.getSessionJson(api, sessionId);
+
+          // 5. Assertions: 400 response en sessie ongewijzigd
+          assertions.expectBadRequest(updateRes);
+          expect(FetchedSessionAfterUpdate).toMatchObject(originalFetchedSession);
+        });
+      }
     }
+  });
 
-    // 7. Log het resultaat van alle invalid update tests
-    console.log(`Tested ${invalidCases.length} invalid update cases. ${invalidUpdatesCount} cases were incorrectly accepted.`);
 
-    // 8. Test faalt alleen indien er ten onrechte een invalid update is geaccepteerd, niet bij 400 responses of correcte rollbacks
-    if (invalidUpdatesCount > 0) {
-        throw new Error(`${invalidUpdatesCount} invalid update cases were incorrectly accepted.`);
+
+  test.describe('2. Update van bestaande sessie met ontbrekend veld geeft 400 error en sessie blijft ongewijzigd', () => {
+
+    const fields = ['title', 'description', 'status', 'duration'];
+
+    for (const field of fields) {
+
+      test(`Ontbrekend veld "${field}" geeft 400 en laat sessie ongewijzigd`, async ({ api }) => {
+        // 1. Unieke sessie is al aangemaakt in beforeEach
+        const sessionId = originalFetchedSessionsById[0].id;
+        const originalFetchedSession = originalFetchedSessionsById[0];
+        const originalPayload = originalPayloads[0];
+
+        // 2. Maak update-payload met ontbrekend veld
+        const updatePayload = { ...originalPayload }; //kopie van je originele payload
+        delete updatePayload[field];
+
+        // 3. Update uitvoeren
+        const updateRes = await apiHelpers.updateSession(api, sessionId, updatePayload);
+
+        // 4. Huidige staat ophalen
+        const FetchedSessionAfterUpdate = await apiHelpers.getSessionJson(api, sessionId);
+
+        // 5. Assertions: 400 response en sessie ongewijzigd
+        assertions.expectBadRequest(updateRes);
+        expect(FetchedSessionAfterUpdate).toMatchObject(originalFetchedSession);
+      });
     }
+  });
+
+  test.describe('3. Single-field update geeft 200 en wijzigt alleen dat veld en updated_at', () => {
+
+    const validFieldValues = testData.validFieldValues;
+
+    for (const [field, values] of Object.entries(validFieldValues)) {
+
+      for (const value of values) {
+
+        test(`Valid update: veld "${field}" met waarde ${JSON.stringify(value)} geeft 200`, async ({ api }) => {
+          // 1. Unieke sessie is al aangemaakt in beforeEach
+          const sessionId = originalFetchedSessionsById[0].id;
+          const originalFetchedSession = originalFetchedSessionsById[0];
+          const originalPayload = originalPayloads[0];
+
+          // 2. Maak update-payload met ontbrekend veld
+          const updatePayload = { ...originalPayload };
+          updatePayload[field] = value;
+
+          // 3. Update uitvoeren
+          const updateRes = await apiHelpers.updateSession(api, sessionId, updatePayload);
+          assertions.expectOk(updateRes);
+
+          // 4. Huidige staat ophalen
+          const FetchedSessionAfterUpdate = await apiHelpers.getSessionJson(api, sessionId);
+
+          // 5. Assertions: updated_at moet veranderd zijn, Gewijzigd veld moet nieuwe waarde hebben en overige velden moeten ongewijzigd zijn
+          //expect(FetchedSessionAfterUpdate.updated_at).not.toBe(originalFetchedSession.updated_at);
+          expect(new Date(FetchedSessionAfterUpdate.updated_at).getTime()).toBeGreaterThanOrEqual(new Date(originalFetchedSession.updated_at).getTime());
+          expect(FetchedSessionAfterUpdate[field]).toBe(value);
+          for (const key of Object.keys(originalFetchedSession)) {
+            if (key !== field && key !== "updated_at") {
+              expect(FetchedSessionAfterUpdate[key]).toEqual(originalFetchedSession[key]);
+            }
+          }
+        });
+      }
+    }
+  });
 
 
-    });
+
 });
 
